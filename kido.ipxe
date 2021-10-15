@@ -1,0 +1,128 @@
+#!ipxe
+prompt --key 0x02 --timeout 2000 Press Ctrl-B for the iPXE command line... && shell ||
+#set bdf 0000:3d:00.3
+#set KidoBDF 0000:00:08.0
+#set KidoMAC 08:00:27:6b:53:eb
+#set KidoMAC 08:00:27:89:ea:ad
+#set KidoIP 10.5.12.120
+#set KidoNETMASK 255.255.255.0
+#set KidoGATEWAY 10.5.12.1
+#set KidoFILENAME http://10.5.15.10/test/bdf.ipxe
+#set KidoDNS 8.8.8.8
+
+chain file:/utils/Kido.ipxe ||
+console
+
+isset ${KidoFILENAME} && set filename ${KidoFILENAME} ||
+isset ${KidoBDF} && goto boot_via_bdf ||
+isset ${KidoMAC} && goto boot_via_mac ||
+goto default_boot
+exit
+
+:exit_ipxe
+exit
+
+:boot_via_bdf
+echo BOOT via BDF
+set idx:int32 0
+set loop_count:int32 1
+:loop_bdf isset ${net${idx}/mac} || goto exit_ipxe
+  echo net${idx} is a ${net${idx}/chip} with MAC ${net${idx}/mac}  bdf ${net${idx}/busloc:busdevfn}
+  iseq ${net${idx}/busloc:busdevfn} ${KidoBDF} && set target_dev net${idx} ||
+  isset ${target_dev} && goto configure_ip ||
+  inc idx && goto loop_bdf
+#:loop_done
+exit
+
+
+:boot_via_mac
+echo BOOT via MAC
+set idx:int32 0
+set loop_count:int32 1
+:loop_mac isset ${net${idx}/mac} || goto exit_ipxe
+  #echo net${idx} is a ${net${idx}/chip} with MAC ${net${idx}/mac} bdf ${net${idx}/busloc:busdevfn}
+  iseq ${net${idx}/mac} ${KidoMAC} && set target_dev net${idx} ||
+  isset ${target_dev} && goto configure_ip ||
+  inc idx && goto loop_mac
+#:loop_done
+exit
+
+
+:configure_ip
+  ifopen ${target_dev}
+  echo Configure IP address for ${target_dev}
+  isset ${KidoDNS} && set ${target_dev}/dns ${KidoDNS} ||
+  isset ${KidoIP} || goto use_dhcp
+  isset ${KidoNETMASK} || goto use_dhcp
+  isset ${KidoGATEWAY} || goto use_dhcp
+  goto use_static_ip
+exit
+
+:use_dhcp
+  echo use dhcp
+  dhcp ${target_dev} || goto default_boot
+  isset ${KidoDNS} && set ${target_dev}/dns ${KidoDNS} ||
+  isset ${KidoFILENAME} && set filename ${KidoFILENAME} ||
+  chain -r -a ${filename} ||
+exit
+
+:use_static_ip
+  echo use static ip
+  echo set ${target_dev}/ip ${KidoIP}
+  set ${target_dev}/ip ${KidoIP}
+  echo set ${target_dev}/netmask ${KidoNETMASK}
+  set ${target_dev}/netmask ${KidoNETMASK}
+  echo set ${target_dev}/gateway ${KidoGATEWAY}
+  set ${target_dev}/gateway ${KidoGATEWAY}
+  echo set ${filename}
+  chain -r -a ${filename} ||
+exit
+
+:default_boot
+  clear target_dev
+  isset ${KidoIP} || goto default_dhcp
+  isset ${KidoNETMASK} || goto default_dhcp
+  isset ${KidoGATEWAY} || goto default_dhcp
+  goto default_static_ip
+exit
+
+:default_dhcp
+  echo Default DHCP
+  set idx:int32 0
+  set loop_count:int32 1
+  :loop_dhcp isset ${net${idx}/mac} || goto exit_ipxe
+   ifopen net${idx}
+   sleep 3
+   echo Connectivity check for net${idx}
+   dhcp && goto chain_boot ||
+   ifclose net${idx}
+   inc idx
+   goto loop_dhcp
+exit
+
+:default_static_ip
+  echo Default Static
+  set idx:int32 0
+  set loop_count:int32 1
+  :loop_static isset ${net${idx}/mac} || goto exit_ipxe
+   ifopen net${idx}
+   echo set net${idx}/ip ${KidoIP}
+   set net${idx}/ip ${KidoIP}
+   echo set net${idx}/netmask ${KidoNETMASK}
+   set net${idx}/netmask ${KidoNETMASK}
+   echo set net${idx}/gateway ${KidoGATEWAY}
+   set net${idx}/gateway ${KidoGATEWAY}
+   echo Connectivity check for net${idx}
+   sleep 3
+   ping -c 2 -q ${KidoGATEWAY} && goto chain_boot ||
+   ifclose net${idx}
+   inc idx
+   goto loop_static
+exit
+
+:chain_boot
+echo Kido Chain Boot
+sleep 2
+chain -r -a ${filename}
+exit
+
