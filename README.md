@@ -1,6 +1,6 @@
 # bootloader-generator
 This tool can be used to generate bootloader file for bootstrapping a system to PXE without having DHCP service running on the same network
-Please note, secureboot needs to be disabled in BIOS since the bootloader is not signed with validate certificate.
+Please note, secureboot needs to be disabled in BIOS since the bootloader is not signed with valid certificate.
 
 # How to test the service
 Simply run following command to start the service. The service will listen on port 80 and 443.
