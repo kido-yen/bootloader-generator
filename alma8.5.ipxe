@@ -1,0 +1,6 @@
+#!ipxe
+imgfree
+set base-url https://hkg.mirror.rackspace.com/almalinux/8.5/BaseOS/x86_64/os
+set ks-url https://raw.githubusercontent.com/kido-yen/bootloader-generator/main
+initrd ${base-url}/isolinux/initrd.img
+chain ${base-url}/isolinux/vmlinuz initrd=initrd.img ro inst.nosave=all inst.sshd ksdevice=${mac} ip=${ip}::${gateway}:${netmask}:::none:: nameserver=8.8.8.8 nameserver=8.8.4.4 inst.stage2=${base-url} inst.ks=${ks-url}/alma8.5.ks
