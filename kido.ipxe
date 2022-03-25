@@ -49,7 +49,7 @@ exit
 
 
 :configure_ip
-  ifopen ${target_dev}
+  iflinkwait --timeout 5000 ${target_dev} ||
   echo Configure IP address for ${target_dev}
   isset ${KidoDNS} && set ${target_dev}/dns ${KidoDNS} ||
   isset ${KidoIP} || goto use_dhcp
@@ -91,7 +91,7 @@ exit
   set idx:int32 0
   set loop_count:int32 1
   :loop_dhcp isset ${net${idx}/mac} || goto exit_ipxe
-   ifopen net${idx}
+   iflinkwait --timeout 5000 net${idx} ||
    sleep 3
    echo Connectivity check for net${idx}
    dhcp && goto chain_boot ||
@@ -105,7 +105,7 @@ exit
   set idx:int32 0
   set loop_count:int32 1
   :loop_static isset ${net${idx}/mac} || goto exit_ipxe
-   ifopen net${idx}
+   iflinkwait --timeout 5000 net${idx} || goto loop_conn_ck_done
    echo set net${idx}/ip ${KidoIP}
    set net${idx}/ip ${KidoIP}
    echo set net${idx}/netmask ${KidoNETMASK}
@@ -113,8 +113,11 @@ exit
    echo set net${idx}/gateway ${KidoGATEWAY}
    set net${idx}/gateway ${KidoGATEWAY}
    echo Connectivity check for net${idx}
-   sleep 3
-   ping -c 2 -q ${KidoGATEWAY} && goto chain_boot ||
+   set pidx:int32 0
+   :loop_conn_ck iseq ${pidx} 10 && goto loop_conn_ck_done ||
+    ping -c 1 -q ${KidoGATEWAY} && goto chain_boot ||
+    inc pidx && goto loop_conn_ck
+   :loop_conn_ck_done
    ifclose net${idx}
    inc idx
    goto loop_static
@@ -125,4 +128,3 @@ echo Kido Chain Boot
 sleep 2
 chain -r -a ${filename}
 exit
-
