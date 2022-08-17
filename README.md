@@ -42,8 +42,9 @@ http://10.102.14.83/bootloader/?KidoIP=10.102.14.111&KidoNETMASK=255.255.255.0&K
 * Sample bootstrap file - boot a machine from network to RHEL8.x rescue mode.
 can be used for BIOS/BMC firmware upgrade or create raid for a machine which does not have OS installed.
 after booting to rescue mode, server can be accessed through ssh without supplying password using root account.
-#!ipxe
+<pre>#!ipxe
 imgfree
 set base-url http://10.7.21.51/adt
 initrd ${base-url}/centos7.8/isolinux/initrd.img
 chain ${base-url}/centos7.8/isolinux/vmlinuz initrd=initrd.img ro rescue inst.sshd ksdevice=${mac} ip=${ip}::${gateway}:${netmask}:::none:: nameserver=8.8.8.8 nameserver=8.8.4.4 inst.stage2=${base-url}/centos7.8/
+</pre>
