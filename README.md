@@ -1,12 +1,22 @@
 # bootloader-generator
-This tool can be used to generate bootloader file for bootstrapping a system to PXE without having DHCP service running on the same network
+This tool can be used to generate bootloader file for bootstrapping a system to PXE without having DHCP service running on the same network.
+The lastest update offers better support for the LACP + LACP fallback + MLAG underlying network architecture.
+The prebuilt image is pushed to dockerhub as well. 
+
 Please note, secureboot needs to be disabled in BIOS since the bootloader is not signed with valid certificate.
+
+# prebuilt docker image
+<table>
+  <tr><td>kidoyen/bootloader-generator:lacp</td><td>ipxe w/o LACP support</td><td>no need to handle LACP ACK after switching to OS</td></tr>
+  <tr><td>kidoyen/bootloader-generator:latest</td><td>ipxe w/ LACP support</td><td>need to handle LACP ACK after switching to OS</td></tr>
+</table>
 
 # How to test the service
 Simply run following command to start the service. The service will listen on port 80 and 443.
 To start the service using pre-built container image, run start.sh.
 To build the container image with preloaded ipxe image and start the service, run start-build.sh.
 To build the container image with latest ipxe version and start the service, run start-clean_build.sh.
+To build the container image with latest ipxe version with LACP fallback support and start the service, run start-clean_build-lacp.sh.
 To build the latest ipxe image only, run build_ipxe.sh. The file can be located at /tmp/ipxe.efi on host.
 
 # Parameters
