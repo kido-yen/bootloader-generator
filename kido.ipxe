@@ -114,6 +114,7 @@ exit
    set net${idx}/gateway ${KidoGATEWAY}
    echo Connectivity check for net${idx}
    set pidx:int32 0
+   sleep 5
    :loop_conn_ck iseq ${pidx} 10 && goto loop_conn_ck_done ||
     ping -c 1 -q ${KidoGATEWAY} && goto chain_boot ||
     inc pidx && goto loop_conn_ck
