@@ -113,6 +113,7 @@ exit
    echo set net${idx}/gateway ${KidoGATEWAY}
    set net${idx}/gateway ${KidoGATEWAY}
    echo Connectivity check for net${idx}
+   isset ${KidoDNS} && set ${target_dev}/dns ${KidoDNS} ||
    set pidx:int32 0
    sleep 5
    :loop_conn_ck iseq ${pidx} 10 && goto loop_conn_ck_done ||
